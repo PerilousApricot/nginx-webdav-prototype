@@ -17,14 +17,21 @@ if [ "$USE_SSL" == "true" ]; then
   fi
   cat <<EOF > /etc/nginx/conf.d/site.conf
 server {
-    listen              $PORT ssl;
-    listen              [::]:$PORT ssl;
+    listen              $PORT quic reuseport;
+    listen              $PORT http2 ssl;
+    listen              [::]:$PORT quic reuseport;
+    listen              [::]:$PORT http2 ssl;
     server_name         $SERVER_NAME;
     ssl_certificate     $SSL_HOST_CERT;
     ssl_certificate_key $SSL_HOST_KEY;
     ssl_protocols       TLSv1.2 TLSv1.3;
     ssl_ciphers         HIGH:!aNULL:!MD5;
-
+    location / {
+        # required for browsers to direct them to quic port
+        add_header Alt-Svc 'h3=":$PORT"; ma=86400';
+        return 404;
+        access_log off;
+    }
     include /etc/nginx/conf.d/include/locations.conf;
 }
 EOF
@@ -35,10 +42,14 @@ else
   fi
   cat <<EOF > /etc/nginx/conf.d/site.conf
 server {
+    # http/2 and quic (http/3) require SSL, so can't enable here
     listen              $PORT;
     listen              [::]:$PORT;
     server_name         $SERVER_NAME;
-
+    location / {
+        return 404;
+        access_log off;
+    }
     include /etc/nginx/conf.d/include/locations.conf;
 }
 EOF

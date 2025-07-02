@@ -1,8 +1,8 @@
 # Heavily based on https://github.com/openresty/docker-openresty/blob/master/centos/Dockerfile
-FROM docker.io/almalinux:9 as build
+FROM docker.io/almalinux:9 AS build
 
 ARG RESTY_VERSION="1.27.1.1"
-ARG RESTY_LUAROCKS_VERSION="3.11.1"
+ARG RESTY_LUAROCKS_VERSION="3.12.2"
 # TODO: arch specific build
 
 WORKDIR /usr/local/src
@@ -35,9 +35,10 @@ RUN curl -Ol https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz \
     && make build \
     && make install
 
-RUN /usr/local/openresty/luajit/bin/luarocks install luaposix
 
 RUN /usr/local/openresty/luajit/bin/luarocks install lua-resty-openidc
+
+RUN /usr/local/openresty/luajit/bin/luarocks install luaposix
 
 RUN /usr/local/openresty/luajit/bin/luarocks install lua-zlib
 
